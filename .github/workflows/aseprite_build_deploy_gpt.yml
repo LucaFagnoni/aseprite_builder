@@ -1,4 +1,4 @@
-name: Build and deploy Aseprite GPT
+name: Build and deploy Aseprite
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
         data=$(curl -sL https://api.github.com/repos/aseprite/aseprite/releases/latest)
         LATEST_TAG=$(echo "${data}" | jq -r '.tag_name')
         DOWNLOAD_URL=$(echo "${data}" | jq -r '.assets[].browser_download_url')
-        VERSION_INFO=$(echo "${data}" | jq -r '.body')
+        VERSION_INFO=$(echo "${data}" | jq -r '.body' | base64)
         
         echo "${LATEST_TAG}" > ${LATEST_TAG}.txt
         
@@ -51,7 +51,7 @@ jobs:
         tag_name: ${{ steps.version_info.outputs.latest_tag }}
         release_name: Release Aseprite ${{ steps.version_info.outputs.latest_tag }}
         body: |
-          ${{ steps.version_info.outputs.version_info }}
+          ${{ steps.version_info.outputs.version_info | fromJson | base64Decode }}
         draft: true
         prerelease: false
   
@@ -62,7 +62,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Checkout source code
         uses: actions/checkout@v2
